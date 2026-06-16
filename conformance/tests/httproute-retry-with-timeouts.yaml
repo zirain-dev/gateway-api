@@ -13,6 +13,8 @@ spec:
             value: /retry/backend-request-timeout-200ms
       retry:
         attempts: 2
+        codes:
+          - 500
       timeouts:
         backendRequest: 200ms
       backendRefs:

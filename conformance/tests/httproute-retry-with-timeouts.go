@@ -68,7 +68,7 @@ var HTTPRouteRetryWithTimeouts = confsuite.ConformanceTest{
 					retrySimulationConfig: url.Values{
 						"responseCode": []string{"500"},
 						"succeedAfter": []string{"2"},
-						"delayRetry":   []string{"300ms"},
+						"delayRetry":   []string{"100ms"},
 					},
 				},
 				want: http.Response{StatusCode: 200},
