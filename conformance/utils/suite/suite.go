@@ -535,13 +535,15 @@ func (suite *ConformanceTestSuite) Run(t *testing.T, tests []ConformanceTest) er
 		passed := t.Run(test.ShortName, func(subT *testing.T) {
 			subT.Cleanup(func() {
 				suite.recordTestResult(subT, test, res)
-				if suite.Hook != nil {
-					suite.Hook(subT, test, suite)
-				}
 			})
 			err := suite.setClientsetForTest(test)
 			require.NoError(subT, err, "failed to create new clientset for test")
 			test.Run(subT, suite)
+			if suite.Hook != nil {
+				subT.Cleanup(func() {
+					suite.Hook(subT, test, suite)
+				})
+			}
 		})
 		// t.Run's return value is the only reliable signal of whether the test
 		// actually failed: `res` above only reflects pre-run skip/support
