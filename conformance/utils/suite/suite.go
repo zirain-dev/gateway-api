@@ -534,19 +534,24 @@ func (suite *ConformanceTestSuite) Run(t *testing.T, tests []ConformanceTest) er
 			subT.Cleanup(func() {
 				suite.recordTestResult(subT, test, res)
 			})
+			// Register the Hook via a plain defer, not subT.Cleanup, and register it
+			// before calling test.Run. Fatal-style failures inside test.Run (t.Fatal,
+			// require.*) call t.FailNow(), which unwinds this goroutine via
+			// runtime.Goexit() and never returns control here - a subT.Cleanup call
+			// placed after test.Run would simply never be reached. A defer, in
+			// contrast, still fires during that unwind, so the Hook reliably runs
+			// even on fatal failures. It also still runs before any subT.Cleanup the
+			// test itself registers during test.Run (e.g. deleting the resources it
+			// created): testing.T only runs Cleanup funcs after the test function -
+			// including its own defers - has fully returned, so this defer is
+			// guaranteed to fire first, while resources are still present for the
+			// Hook to inspect.
+			if suite.Hook != nil {
+				defer suite.Hook(subT, test, suite)
+			}
 			err := suite.setClientsetForTest(test)
 			require.NoError(subT, err, "failed to create new clientset for test")
 			test.Run(subT, suite)
-			// Register the Hook's cleanup only after test.Run has returned, so it is
-			// the last cleanup registered on subT. testing.T runs Cleanup funcs in
-			// LIFO order, so this makes the Hook run before any cleanup the test
-			// itself registered during test.Run (e.g. deleting the resources it
-			// created), while resources are still present for the Hook to inspect.
-			if suite.Hook != nil {
-				subT.Cleanup(func() {
-					suite.Hook(subT, test, suite)
-				})
-			}
 		})
 
 		if res == testSucceeded {
