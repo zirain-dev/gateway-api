@@ -22,6 +22,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 	xnetws "golang.org/x/net/websocket"
 	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -840,9 +841,9 @@ func TestRunHookRunsBeforeCleanupOnAbruptTestExit(t *testing.T) {
 		SupportedFeatures: FeaturesSet{},
 	}
 
-	assert.NoError(t, s.Run(t, tests))
-	assert.Equal(t, len(tests), hookCalls, "Hook should run once per test, including every failed one")
-	assert.Equal(t, []string{
+	require.NoError(t, s.Run(t, tests))
+	require.Equal(t, len(tests), hookCalls, "Hook should run once per test, including every failed one")
+	require.Equal(t, []string{
 		"abruptOne:hook", "abruptOne:cleanup",
 		"passing:hook", "passing:cleanup",
 		"abruptTwo:hook", "abruptTwo:cleanup",
